@@ -1,32 +1,198 @@
-# React + TypeScript + Vite
+# 🚀 SupportFlow
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern IT Service Desk application built with **React**, **TypeScript**, **Vite**, and **Tailwind CSS**.
 
-Currently, two official plugins are available:
+SupportFlow is a portfolio project that demonstrates enterprise-style ticket management, customer management, reporting dashboards, and application settings similar to commercial platforms such as Jira, Zendesk, Freshservice, and ServiceNow.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 📸 Application
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Dashboard
+- KPI Dashboard
+- Ticket Analytics
+- Recent Tickets
+- Status Breakdown
 
-## Expanding the Oxlint configuration
+### Ticket Management
+- Create Tickets
+- Ticket Details Drawer
+- Internal Comments
+- Activity Timeline
+- Search Tickets
+- Status Filter
+- Priority Filter
+- Assignee Filter
+- Clear Filters
+- Pagination
+- Row Selection
+- Select All
+- Sorting
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### Customers
+- Customer Dashboard
+- Customer Search
+- Customer Statistics
+- Customer Details Panel
+- Customer Ticket History
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### Reports
+- Dashboard Metrics
+- Ticket Status Pie Chart
+- Ticket Priority Bar Chart
+- Top Customers
+- Agent Workload
+
+### Settings
+- Profile Settings
+- Notification Preferences
+- Appearance Settings
+- Application Preferences
+- Local Storage Persistence
+
+---
+
+# 🛠 Tech Stack
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Recharts
+- React Hot Toast
+- Context API
+
+---
+
+# 📂 Project Structure
+
+```
+src/
+│
+├── components/
+├── context/
+├── data/
+├── pages/
+├── types/
+│
+├── App.tsx
+├── main.tsx
+└── index.css
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+# 🚀 Getting Started
+
+## Clone the repository
+
+```bash
+git clone https://github.com/SincereSag87/supportflow.git
+```
+
+Enter the project
+
+```bash
+cd supportflow
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Run the development server
+
+```bash
+npm run dev
+```
+
+Open your browser
+
+```
+http://localhost:5173
+```
+
+---
+
+# 📦 Build
+
+```bash
+npm run build
+```
+
+Preview production build
+
+```bash
+npm run preview
+```
+
+---
+
+# 🚀 Deployment
+
+SupportFlow is configured for deployment on **Vercel**.
+
+The project includes:
+
+- Vite
+- SPA Routing
+- `vercel.json`
+
+Deployment is automatic through GitHub integration.
+
+---
+
+# ✨ Future Improvements
+
+- Dark Mode
+- Notification Center
+- Email Integration
+- Authentication Backend
+- Database Integration
+- REST API
+- User Roles
+- SLA Tracking
+- Knowledge Base
+- File Attachments
+- Audit Logs
+
+---
+
+# 📈 Version History
+
+## v1.0.0
+
+Initial public release.
+
+### Features
+
+- Dashboard
+- Ticket Management
+- Customer Management
+- Reports
+- Settings
+- Analytics
+- Comments
+- Timeline
+- Pagination
+- Filtering
+- Sorting
+
+---
+
+# 👨‍💻 Author
+
+**Raymond Wannamaker**
+
+GitHub
+
+https://github.com/SincereSag87
+
+---
+
+# 📄 License
+
+This project is licensed under the MIT License.
