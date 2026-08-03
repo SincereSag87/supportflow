@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TicketDetails from "../components/TicketDetails";
 import TicketTable, {
   type SortDirection,
   type SortField,
 } from "../components/TicketTable";
-import { tickets } from "../data/tickets";
+import { useTickets } from "../context/TicketContext";
 import type { Ticket } from "../types/Ticket";
 
 export default function Tickets() {
-  const [ticketList, setTicketList] = useState<Ticket[]>(tickets);
+  const {tickets: ticketList,updateTicket,deleteTicket} = useTickets();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] =
@@ -25,6 +25,24 @@ export default function Tickets() {
   const [selectedTicket, setSelectedTicket] =
     useState<Ticket | null>(null);
 
+  const [selectedTicketIds, setSelectedTicketIds] =
+  useState<string[]>([]);
+
+  const [assigneeFilter, setAssigneeFilter] =
+  useState("All Assignees");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ticketsPerPage = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    statusFilter,
+    priorityFilter,
+    assigneeFilter,
+  ]);
+
   function handleSort(field: SortField) {
     if (field === sortField) {
       setSortDirection((current) =>
@@ -35,6 +53,17 @@ export default function Tickets() {
       setSortDirection("asc");
     }
   }
+
+  const assignees = useMemo(() => {
+  return [
+    "All Assignees",
+    ...Array.from(
+      new Set(
+        ticketList.map((ticket) => ticket.assignedTo),
+      ),
+    ).sort(),
+  ];
+}, [ticketList]);
 
   const filteredTickets = useMemo(() => {
     const normalizedSearch =
@@ -64,10 +93,15 @@ export default function Tickets() {
         priorityFilter === "All Priorities" ||
         ticket.priority === priorityFilter;
 
+      const matchesAssignee =
+        assigneeFilter === "All Assignees" ||
+        ticket.assignedTo === assigneeFilter;
+
       return (
         matchesSearch &&
         matchesStatus &&
-        matchesPriority
+        matchesPriority &&
+        matchesAssignee
       );
     });
 
@@ -94,7 +128,20 @@ export default function Tickets() {
     priorityFilter,
     sortField,
     sortDirection,
+    assigneeFilter,
   ]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredTickets.length / ticketsPerPage),
+  );
+
+  const paginatedTickets = useMemo(() => {
+    const startIndex = (currentPage - 1) * ticketsPerPage;
+    const endIndex = startIndex + ticketsPerPage;
+
+    return filteredTickets.slice(startIndex, endIndex);
+  }, [filteredTickets, currentPage]);
 
   return (
     <>
@@ -175,6 +222,32 @@ export default function Tickets() {
               </select>
             </div>
 
+            <select
+              value={assigneeFilter}
+              onChange={(event) =>
+                setAssigneeFilter(event.target.value)
+            }
+            className="rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-indigo-500"
+          >
+            {assignees.map((assignee) => (
+              <option key={assignee} value={assignee}>
+                {assignee}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchTerm("");
+              setStatusFilter("All Statuses");
+              setPriorityFilter("All Priorities");
+              setAssigneeFilter("All Assignees");
+            }}
+            className="rounded-xl border border-slate-300 px-5 py-3 font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            Clear Filters
+          </button>
+
             <button
               type="button"
               className="rounded-xl bg-indigo-600 px-5 py-3 font-medium text-white hover:bg-indigo-500"
@@ -184,12 +257,104 @@ export default function Tickets() {
           </div>
 
           <TicketTable
-            tickets={filteredTickets}
+            tickets={paginatedTickets}
             sortField={sortField}
             sortDirection={sortDirection}
+            selectedTicketIds={selectedTicketIds}
             onSort={handleSort}
             onSelectTicket={setSelectedTicket}
+            onToggleTicket={(ticketId) => {
+              setSelectedTicketIds((currentIds) =>
+                currentIds.includes(ticketId)
+                  ? currentIds.filter((id) => id !== ticketId)
+                  : [...currentIds, ticketId],
+              );
+            }}
+            onToggleAll={() => {
+              const currentPageIds = paginatedTickets.map(
+                (ticket) => ticket.id,
+              );
+
+            setSelectedTicketIds((currentIds) => {
+              const allCurrentPageTicketsSelected =
+                currentPageIds.length > 0 &&
+                currentPageIds.every((ticketId) =>
+                  currentIds.includes(ticketId),
+                );
+                    
+              if (allCurrentPageTicketsSelected) {
+                  return currentIds.filter(
+                    (ticketId) => !currentPageIds.includes(ticketId),
+                  );
+                }
+
+                return Array.from(
+                  new Set([
+                    ...currentIds,
+                    ...currentPageIds,
+                  ]),
+                );
+              });
+            }}
           />
+          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-500">
+              Showing{" "}
+              <span className="font-semibold text-slate-900">
+                {paginatedTickets.length}
+              </span>
+              of{" "}
+              <span className="font-semibold text-slate-900">
+                {filteredTickets.length}
+              </span>{" "}
+              tickets • Page{" "}
+              <span className="font-semibold text-slate-900">
+                {currentPage}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-slate-900">
+                {totalPages}
+              </span>
+            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((current) =>
+                    Math.max(1, current - 1),
+                  )
+                }
+                disabled={currentPage === 1}
+                className={[
+                  "rounded-xl border px-4 py-2 text-sm font-medium transition",
+                  currentPage === 1
+                    ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+                ].join(" ")}
+              >
+                Previous
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((current) =>
+                    Math.min(totalPages, current + 1),
+                  )
+                }
+                disabled={currentPage === totalPages}
+                className={[
+                  "rounded-xl border px-4 py-2 text-sm font-medium transition",
+                  currentPage === totalPages
+                    ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+                ].join(" ")}
+              >
+                Next
+            </button>
+          </div>
+        </div>
         </div>
       </main>
 
@@ -197,15 +362,12 @@ export default function Tickets() {
         ticket={selectedTicket}
         onClose={() => setSelectedTicket(null)}
         onUpdateTicket={(updatedTicket) => {
-          setTicketList((currentTickets) =>
-            currentTickets.map((ticket) =>
-              ticket.id === updatedTicket.id
-                ? updatedTicket
-                : ticket,
-           ),
-         );
-
+          updateTicket(updatedTicket);
           setSelectedTicket(updatedTicket);
+        }}
+        onDeleteTicket={(ticketId) => {
+          deleteTicket(ticketId);
+          setSelectedTicket(null);
         }}
       />
     </>

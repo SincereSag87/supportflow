@@ -11,6 +11,20 @@ export type TicketPriority =
   | "High"
   | "Critical";
 
+export interface TicketComment {
+  id: number;
+  author: string;
+  comment: string;
+  time: string;
+}
+
+export interface TicketTimelineEvent {
+  id: number;
+  title: string;
+  description: string;
+  time: string;
+}
+
 export interface Ticket {
   id: string;
   subject: string;
@@ -19,4 +33,6 @@ export interface Ticket {
   status: TicketStatus;
   priority: TicketPriority;
   updatedAt: string;
+  comments: TicketComment[];
+  timeline: TicketTimelineEvent[];
 }

@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { ticketComments } from "../data/ticketComments";
-import { ticketTimeline } from "../data/ticketTimeline";
 import type { Ticket } from "../types/Ticket";
 import type { TicketComment } from "../types/TicketComment";
 import TicketActions from "./TicketActions";
@@ -10,15 +8,17 @@ type TicketDetailsProps = {
   ticket: Ticket | null;
   onClose: () => void;
   onUpdateTicket: (ticket: Ticket) => void;
+  onDeleteTicket: (ticketId: string) => void;
 };
 
 export default function TicketDetails({
   ticket,
   onClose,
   onUpdateTicket,
+  onDeleteTicket,
 }: TicketDetailsProps) {
   const [comments, setComments] =
-    useState<TicketComment[]>(ticketComments);
+    useState<TicketComment[]>([]);
 
   const [newComment, setNewComment] = useState("");
 
@@ -28,11 +28,15 @@ export default function TicketDetails({
   const [editingText, setEditingText] = useState("");
 
   useEffect(() => {
-    setComments(ticketComments);
+    if(!ticket){
+      return;
+    }
+
+    setComments(ticket.comments);
     setNewComment("");
     setEditingCommentId(null);
     setEditingText("");
-  }, [ticket]);
+  }, [ticket?.id]);
 
   if (!ticket) {
     return null;
@@ -48,39 +52,45 @@ export default function TicketDetails({
     .toUpperCase();
 
   function handleAssign() {
-    const updatedTicket: Ticket = {
-      ...currentTicket,
-      assignedTo: "Raymond Wannamaker",
-      status: 
-        currentTicket.status === "Open" 
-          ? "In Progress" 
-          : currentTicket.status,
-      updatedAt: "Just now",
-    };
+    updateTicketWithTimeline(
+      {
+        assignedTo: "Raymond Wannamaker",
+        status:
+          currentTicket.status === "Open"
+            ? "In Progress"
+            : currentTicket.status,
+      },
+      "Ticket assigned",
+      "Assigned to Raymond Wannamaker.",
+    );
 
-    onUpdateTicket(updatedTicket);
-    toast.success(`${currentTicket.id} assigned to Raymond Wannamaker.`);
+    toast.success(
+      `${currentTicket.id} assigned to Raymond Wannamaker.`,
+    );
   }
 
   function handleResolve() {
-    const updatedTicket: Ticket = {
-      ...currentTicket,
-      status: "Resolved",
-      updatedAt: "Just now",
-    };
+    updateTicketWithTimeline(
+      {
+        status: "Resolved",
+      },
+      "Ticket resolved",
+      "Resolved by Raymond Wannamaker",
+    );
 
-    onUpdateTicket(updatedTicket);
-    toast.success(`${currentTicket.id} marked as resolved.`);
+    toast.success(
+      `${currentTicket.id} marked as resolved.`,
+    );
   }
 
   function handleEscalate() {
-    const updatedTicket: Ticket = {
-      ...currentTicket,
-      priority: "Critical",
-      updatedAt: "Just now",
-    };
-
-    onUpdateTicket(updatedTicket);
+    updateTicketWithTimeline(
+      {
+        priority: "Critical",
+      },
+      "Ticket escalated",
+      "Priority changed to Critical.",
+    );
 
     toast(`${currentTicket.id} escalated to Critical priority.`, {
       icon: "⚠️",
@@ -88,39 +98,109 @@ export default function TicketDetails({
   }
 
   function handleCloseTicket() {
-    const updatedTicket: Ticket = {
-      ...currentTicket,
+  updateTicketWithTimeline(
+    {
       status: "Closed",
-      updatedAt: "Just now",
-    };
+    },
+    "Ticket closed",
+    "Closed by Raymond Wannamaker.",
+  );
 
-    onUpdateTicket(updatedTicket);
-    toast.success(`${currentTicket.id} has been closed.`);
+  toast.success(`${currentTicket.id} has been closed.`);
+}
+
+  function updateTicketWithTimeline(
+  updates: Partial<Ticket>,
+  title: string,
+  description: string,
+) {
+  const timelineEvent = {
+    id: Date.now(),
+    title,
+    description,
+    time: "Just now",
+  };
+
+  const updatedTicket: Ticket = {
+    ...currentTicket,
+    ...updates,
+    updatedAt: "Just now",
+    timeline: [
+      timelineEvent,
+      ...currentTicket.timeline,
+    ],
+  };
+
+  onUpdateTicket(updatedTicket);
+}
+
+  function saveComments(updatedComments: TicketComment[]) {
+  setComments(updatedComments);
+
+  onUpdateTicket({
+    ...currentTicket,
+    comments: updatedComments,
+    updatedAt: "Just now",
+  });
+}
+
+  function handleDeleteTicket() {
+  const confirmed = window.confirm(
+    `Are you sure you want to permanently delete ${currentTicket.id}?`,
+  );
+
+  if (!confirmed) {
+    return;
   }
+
+  onDeleteTicket(currentTicket.id);
+  toast.success(`${currentTicket.id} deleted successfully.`);
+}
 
   function handleAddComment() {
-    const trimmedComment = newComment.trim();
+  const trimmedComment = newComment.trim();
 
-    if (!trimmedComment) {
-      toast.error("Please enter a comment.");
-      return;
-    }
-
-    const comment: TicketComment = {
-      id: Date.now(),
-      author: "Raymond Wannamaker",
-      comment: trimmedComment,
-      time: "Just now",
-    };
-
-    setComments((currentComments) => [
-      comment,
-      ...currentComments,
-    ]);
-
-    setNewComment("");
-    toast.success("Comment added.");
+  if (trimmedComment.length === 0) {
+    toast.error("Please enter a comment.");
+    return;
   }
+
+  const timestamp = Date.now();
+
+  const newTicketComment: TicketComment = {
+    id: timestamp,
+    author: "Raymond Wannamaker",
+    comment: trimmedComment,
+    time: "Just now",
+  };
+
+  const updatedComments = [
+    newTicketComment,
+    ...currentTicket.comments,
+  ];
+
+  const updatedTicket: Ticket = {
+    ...currentTicket,
+    comments: updatedComments,
+    timeline: [
+      {
+        id: timestamp + 1,
+        title: "Internal comment added",
+        description:
+          "Raymond Wannamaker added an internal comment.",
+        time: "Just now",
+      },
+      ...currentTicket.timeline,
+    ],
+    updatedAt: "Just now",
+  };
+
+  setComments(updatedComments);
+  setNewComment("");
+  onUpdateTicket(updatedTicket);
+
+  toast.success("Comment added.");
+}
 
   function handleDeleteComment(id: number) {
     const confirmed = window.confirm(
@@ -131,8 +211,8 @@ export default function TicketDetails({
       return;
     }
 
-    setComments((currentComments) =>
-      currentComments.filter((comment) => comment.id !== id),
+    saveComments(
+      comments.filter((comment) => comment.id !== id),
     );
 
     if (editingCommentId === id) {
@@ -161,16 +241,16 @@ export default function TicketDetails({
       return;
     }
 
-    setComments((currentComments) =>
-      currentComments.map((comment) =>
+    saveComments(
+      comments.map((comment) =>
         comment.id === id
           ? {
               ...comment,
               comment: trimmedText,
-              time: "Edited just now",
+              time: "Edited just now"
             }
           : comment,
-      ),
+        ),
     );
 
     setEditingCommentId(null);
@@ -266,7 +346,19 @@ export default function TicketDetails({
           onEscalate={handleEscalate}
           onCloseTicket={handleCloseTicket}
         />
-
+        <button
+          type="button"
+          onClick={handleDeleteTicket}
+          disabled={ticket.status === "Closed"}
+          className={[
+            "w-full rounded-xl border px-4 py-3 font-medium transition",
+            ticket.status === "Closed"
+            ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+            : "border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100",
+          ].join(" ")}
+        >
+          Delete Ticket
+        </button>
         <div>
           <p className="text-sm font-semibold text-slate-500">
             Last Updated
@@ -287,7 +379,13 @@ export default function TicketDetails({
           </p>
 
           <div className="mt-5 space-y-5">
-            {ticketTimeline.map((event, index) => (
+            {currentTicket.timeline.length === 0 && (
+              <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+                No activity has been recorded for this ticket yet.
+              </p>
+            )}
+
+            {currentTicket.timeline.map((event, index) => (
               <div
                 key={event.id}
                 className="relative flex gap-4"
@@ -295,7 +393,7 @@ export default function TicketDetails({
                 <div className="flex flex-col items-center">
                   <span className="mt-1 h-3 w-3 rounded-full bg-indigo-600" />
 
-                  {index < ticketTimeline.length - 1 && (
+                  {index < currentTicket.timeline.length - 1 && (
                     <span className="mt-2 h-full w-px bg-slate-200" />
                   )}
                 </div>

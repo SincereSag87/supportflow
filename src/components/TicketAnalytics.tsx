@@ -1,34 +1,62 @@
+import { useMemo } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-
-const ticketData = [
-  { day: "Mon", opened: 28, resolved: 22 },
-  { day: "Tue", opened: 34, resolved: 29 },
-  { day: "Wed", opened: 31, resolved: 35 },
-  { day: "Thu", opened: 42, resolved: 36 },
-  { day: "Fri", opened: 38, resolved: 41 },
-  { day: "Sat", opened: 19, resolved: 24 },
-  { day: "Sun", opened: 16, resolved: 18 },
-];
+import { useTickets } from "../context/TicketContext";
 
 export default function TicketAnalytics() {
+  const { tickets } = useTickets();
+
+  const ticketData = useMemo(() => {
+    return [
+      {
+        status: "Open",
+        total: tickets.filter(
+          (ticket) => ticket.status === "Open",
+        ).length,
+      },
+      {
+        status: "In Progress",
+        total: tickets.filter(
+          (ticket) => ticket.status === "In Progress",
+        ).length,
+      },
+      {
+        status: "Pending",
+        total: tickets.filter(
+          (ticket) => ticket.status === "Pending",
+        ).length,
+      },
+      {
+        status: "Resolved",
+        total: tickets.filter(
+          (ticket) => ticket.status === "Resolved",
+        ).length,
+      },
+      {
+        status: "Closed",
+        total: tickets.filter(
+          (ticket) => ticket.status === "Closed",
+        ).length,
+      },
+    ];
+  }, [tickets]);
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div>
         <h2 className="text-lg font-semibold text-slate-900">
-          Ticket Activity
+          Ticket Status Overview
         </h2>
 
         <p className="mt-1 text-sm text-slate-500">
-          Opened and resolved tickets during the last seven days.
+          Live ticket totals grouped by current status.
         </p>
       </div>
 
@@ -41,7 +69,7 @@ export default function TicketAnalytics() {
             />
 
             <XAxis
-              dataKey="day"
+              dataKey="status"
               stroke="#64748b"
               tickLine={false}
               axisLine={false}
@@ -60,21 +88,13 @@ export default function TicketAnalytics() {
                 border: "1px solid #cbd5e1",
                 borderRadius: "10px",
               }}
+              formatter={(value) => [value, "Tickets"]}
             />
 
-            <Legend />
-
             <Bar
-              dataKey="opened"
-              name="Opened"
+              dataKey="total"
+              name="Tickets"
               fill="#4f46e5"
-              radius={[6, 6, 0, 0]}
-            />
-
-            <Bar
-              dataKey="resolved"
-              name="Resolved"
-              fill="#10b981"
               radius={[6, 6, 0, 0]}
             />
           </BarChart>

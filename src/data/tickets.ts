@@ -9,6 +9,8 @@ export const tickets: Ticket[] = [
     status: "Open",
     priority: "High",
     updatedAt: "10 minutes ago",
+    comments: [],
+    timeline: [],
   },
   {
     id: "TKT-1041",
@@ -18,6 +20,8 @@ export const tickets: Ticket[] = [
     status: "In Progress",
     priority: "Critical",
     updatedAt: "24 minutes ago",
+    comments: [],
+    timeline: [],
   },
   {
     id: "TKT-1040",
@@ -27,6 +31,8 @@ export const tickets: Ticket[] = [
     status: "Pending",
     priority: "Medium",
     updatedAt: "1 hour ago",
+    comments: [],
+    timeline: [],
   },
   {
     id: "TKT-1039",
@@ -36,6 +42,8 @@ export const tickets: Ticket[] = [
     status: "Resolved",
     priority: "Low",
     updatedAt: "2 hours ago",
+    comments: [],
+    timeline: [],
   },
   {
     id: "TKT-1038",
@@ -45,6 +53,8 @@ export const tickets: Ticket[] = [
     status: "In Progress",
     priority: "High",
     updatedAt: "3 hours ago",
+    comments: [],
+    timeline: [],
   },
   {
     id: "TKT-1037",
@@ -54,6 +64,8 @@ export const tickets: Ticket[] = [
     status: "Open",
     priority: "Medium",
     updatedAt: "4 hours ago",
+    comments: [],
+    timeline: [],
   },
   {
     id: "TKT-1036",
@@ -63,6 +75,8 @@ export const tickets: Ticket[] = [
     status: "Pending",
     priority: "Low",
     updatedAt: "Yesterday",
+    comments: [],
+    timeline: [],
   },
   {
     id: "TKT-1035",
@@ -72,5 +86,7 @@ export const tickets: Ticket[] = [
     status: "Resolved",
     priority: "High",
     updatedAt: "Yesterday",
+    comments: [],
+    timeline: [],
   },
 ];

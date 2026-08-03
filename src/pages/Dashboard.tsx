@@ -1,29 +1,55 @@
+import { useMemo } from "react";
 import TicketAnalytics from "../components/TicketAnalytics";
-
-const dashboardCards = [
-  {
-    title: "Open Tickets",
-    value: "128",
-    description: "24 new today",
-  },
-  {
-    title: "Assigned to Me",
-    value: "16",
-    description: "5 high priority",
-  },
-  {
-    title: "Resolved Today",
-    value: "42",
-    description: "92% SLA compliance",
-  },
-  {
-    title: "Pending Approval",
-    value: "7",
-    description: "Awaiting manager review",
-  },
-];
+import { useTickets } from "../context/TicketContext";
+import RecentTickets from "../components/RecentTickets";
+import TicketStatusBreakdown from "../components/TicketStatusBreakdown";
 
 export default function Dashboard() {
+  const { tickets } = useTickets();
+
+  const dashboardCards = useMemo(() => {
+    const openTickets = tickets.filter(
+      (ticket) => ticket.status === "Open",
+    ).length;
+
+    const assignedToMe = tickets.filter(
+      (ticket) =>
+        ticket.assignedTo === "Raymond Wannamaker" &&
+        ticket.status !== "Closed",
+    ).length;
+
+    const resolvedTickets = tickets.filter(
+      (ticket) => ticket.status === "Resolved",
+    ).length;
+
+    const criticalTickets = tickets.filter(
+      (ticket) => ticket.priority === "Critical",
+    ).length;
+
+    return [
+      {
+        title: "Open Tickets",
+        value: openTickets,
+        description: `${tickets.length} total tickets`,
+      },
+      {
+        title: "Assigned to Me",
+        value: assignedToMe,
+        description: "Active tickets assigned to you",
+      },
+      {
+        title: "Resolved",
+        value: resolvedTickets,
+        description: "Tickets marked as resolved",
+      },
+      {
+        title: "Critical Priority",
+        value: criticalTickets,
+        description: "Tickets requiring immediate attention",
+      },
+    ];
+  }, [tickets]);
+
   return (
     <main className="p-8">
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -47,8 +73,13 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 grid gap-8 xl:grid-cols-[1.4fr_1fr]">
         <TicketAnalytics />
+
+        <div className="grid gap-8">
+        <RecentTickets />
+        <TicketStatusBreakdown />
+        </div>
       </div>
     </main>
   );
