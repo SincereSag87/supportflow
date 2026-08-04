@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(AGENT)
+  createdAt    DateTime @default(now())
+
+  assignedTickets Ticket[]         @relation("AssignedTickets")
+  comments        TicketComment[]
+  watching        TicketWatcher[]
+  favorites       TicketFavorite[]
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  subject     String
+  description String         @default("")
+  customer    String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  dueDate     DateTime?
+  labels      String[]       @default([])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  assignedToId String?
+
+  comments    TicketComment[]
+  timeline    TicketTimelineEvent[]
+  attachments TicketAttachment[]
+  watchers    TicketWatcher[]
+  favoritedBy TicketFavorite[]
+
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model TicketComment {
+  id        String   @id @default(cuid())
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId String
+
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  @@index([ticketId])
+}
+
+model TicketTimelineEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId String
+
+  @@index([ticketId])
+}
+
+model TicketAttachment {
+  id         String   @id @default(cuid())
+  name       String
+  size       Int
+  type       String
+  uploadedAt DateTime @default(now())
+
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId String
+
+  @@index([ticketId])
+}
+
+model TicketWatcher {
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  @@id([ticketId, userId])
+}
+
+model TicketFavorite {
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  @@id([ticketId, userId])
+}

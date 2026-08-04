@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: supportflow
+      POSTGRES_PASSWORD: supportflow
+      POSTGRES_DB: supportflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - supportflow-db-data:/var/lib/postgresql/data
+
+volumes:
+  supportflow-db-data:
