@@ -12,8 +12,8 @@ export default function TicketActions({
   onCloseTicket,
 }: TicketActionsProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-      <h3 className="text-lg font-semibold text-slate-900">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition-colors dark:border-slate-700 dark:bg-slate-800">
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
         Quick Actions
       </h3>
 

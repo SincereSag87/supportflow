@@ -9,53 +9,30 @@ import {
   YAxis,
 } from "recharts";
 import { useTickets } from "../context/TicketContext";
+import { useTheme } from "../context/ThemeContext";
+import { getStatusBreakdown } from "../lib/ticketMetrics";
 
 export default function TicketAnalytics() {
   const { tickets } = useTickets();
+  const { resolvedTheme } = useTheme();
+
+  const isDark = resolvedTheme === "dark";
 
   const ticketData = useMemo(() => {
-    return [
-      {
-        status: "Open",
-        total: tickets.filter(
-          (ticket) => ticket.status === "Open",
-        ).length,
-      },
-      {
-        status: "In Progress",
-        total: tickets.filter(
-          (ticket) => ticket.status === "In Progress",
-        ).length,
-      },
-      {
-        status: "Pending",
-        total: tickets.filter(
-          (ticket) => ticket.status === "Pending",
-        ).length,
-      },
-      {
-        status: "Resolved",
-        total: tickets.filter(
-          (ticket) => ticket.status === "Resolved",
-        ).length,
-      },
-      {
-        status: "Closed",
-        total: tickets.filter(
-          (ticket) => ticket.status === "Closed",
-        ).length,
-      },
-    ];
+    return getStatusBreakdown(tickets).map((entry) => ({
+      status: entry.status,
+      total: entry.count,
+    }));
   }, [tickets]);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           Ticket Status Overview
         </h2>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Live ticket totals grouped by current status.
         </p>
       </div>
@@ -64,19 +41,19 @@ export default function TicketAnalytics() {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={ticketData}>
             <CartesianGrid
-              stroke="#e2e8f0"
+              stroke={isDark ? "#334155" : "#e2e8f0"}
               strokeDasharray="4 4"
             />
 
             <XAxis
               dataKey="status"
-              stroke="#64748b"
+              stroke={isDark ? "#94a3b8" : "#64748b"}
               tickLine={false}
               axisLine={false}
             />
 
             <YAxis
-              stroke="#64748b"
+              stroke={isDark ? "#94a3b8" : "#64748b"}
               tickLine={false}
               axisLine={false}
               allowDecimals={false}
@@ -84,9 +61,10 @@ export default function TicketAnalytics() {
 
             <Tooltip
               contentStyle={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #cbd5e1",
+                backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                border: `1px solid ${isDark ? "#334155" : "#cbd5e1"}`,
                 borderRadius: "10px",
+                color: isDark ? "#ffffff" : "#0f172a",
               }}
               formatter={(value) => [value, "Tickets"]}
             />
@@ -94,7 +72,7 @@ export default function TicketAnalytics() {
             <Bar
               dataKey="total"
               name="Tickets"
-              fill="#4f46e5"
+              fill={isDark ? "#6366f1" : "#4f46e5"}
               radius={[6, 6, 0, 0]}
             />
           </BarChart>

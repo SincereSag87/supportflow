@@ -88,59 +88,59 @@ export default function Customers() {
   );
 
   return (
-    <main className="p-8">
+    <main className="min-h-screen bg-slate-50 p-8 transition-colors dark:bg-slate-950">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
             CRM
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+          <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
             Customers
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
             Manage customer accounts and monitor ticket activity.
           </p>
         </div>
 
         <div className="mb-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Total Customers
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-slate-900">
+            <p className="mt-3 text-3xl font-bold text-slate-900 dark:text-white">
               {totalCustomers}
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Customers With Active Tickets
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-amber-600">
+            <p className="mt-3 text-3xl font-bold text-amber-600 dark:text-amber-400">
               {customersWithActiveTickets}
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Active Tickets
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-indigo-600">
+            <p className="mt-3 text-3xl font-bold text-indigo-600 dark:text-indigo-400">
               {totalActiveTickets}
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Resolved Tickets
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-emerald-600">
+            <p className="mt-3 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
               {totalResolvedTickets}
             </p>
           </article>
@@ -154,7 +154,7 @@ export default function Customers() {
               setSearch(event.target.value)
             }
             placeholder="Search customers..."
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500"
           />
         </div>
 
@@ -163,45 +163,45 @@ export default function Customers() {
             <article
               key={customer.name}
               onClick={() => setSelectedCustomer(customer.name)}
-              className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg"
+              className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {customer.name}
                 </h2>
 
-                <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
                   {customer.tickets} Tickets
                 </span>
               </div>
 
               <div className="mt-6 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">
+                  <span className="text-slate-500 dark:text-slate-400">
                     Active Tickets
                   </span>
 
-                  <span className="font-semibold text-amber-600">
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">
                     {customer.open}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">
+                  <span className="text-slate-500 dark:text-slate-400">
                     Resolved Tickets
                   </span>
 
-                  <span className="font-semibold text-emerald-600">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                     {customer.resolved}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">
+                  <span className="text-slate-500 dark:text-slate-400">
                     Completion Rate
                   </span>
 
-                  <span className="font-semibold text-slate-900">
+                  <span className="font-semibold text-slate-900 dark:text-white">
                     {customer.tickets === 0
                       ? "0%"
                       : `${Math.round(
@@ -217,12 +217,12 @@ export default function Customers() {
         </div>
 
         {filteredCustomers.length === 0 && (
-          <div className="mt-10 rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <h3 className="text-xl font-semibold text-slate-900">
+          <div className="mt-10 rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-700 dark:bg-slate-900">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
               No customers found
             </h3>
 
-            <p className="mt-2 text-slate-500">
+            <p className="mt-2 text-slate-500 dark:text-slate-400">
               Try searching with a different customer name.
             </p>
           </div>

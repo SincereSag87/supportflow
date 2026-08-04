@@ -25,6 +25,14 @@ export interface TicketTimelineEvent {
   time: string;
 }
 
+export interface TicketAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  uploadedAt: string;
+}
+
 export interface Ticket {
   id: string;
   subject: string;
@@ -32,7 +40,13 @@ export interface Ticket {
   assignedTo: string;
   status: TicketStatus;
   priority: TicketPriority;
+  createdAt: string;
   updatedAt: string;
+  dueDate: string | null;
+  labels: string[];
+  watchers: string[];
+  attachments: TicketAttachment[];
+  isFavorite: boolean;
   comments: TicketComment[];
   timeline: TicketTimelineEvent[];
 }

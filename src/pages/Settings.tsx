@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTheme } from "../context/ThemeContext";
 
-type ThemePreference = "Light" | "Dark" | "System";
-type DefaultPage = "Dashboard" | "Tickets" | "Customers" | "Reports";
+type DefaultPage = 
+  |"Dashboard" 
+  | "Tickets" 
+  | "Customers" 
+  | "Reports";
+
 type SavedSettings = {
   name: string;
   email: string;
@@ -10,7 +15,7 @@ type SavedSettings = {
   emailNotifications: boolean;
   desktopNotifications: boolean;
   soundAlerts: boolean;
-  theme: ThemePreference;
+  theme: "light" | "dark" | "system";
   compactMode: boolean;
   defaultPage: DefaultPage;
   ticketsPerPage: string;
@@ -30,14 +35,14 @@ export default function Settings() {
     useState(true);
   const [soundAlerts, setSoundAlerts] = useState(false);
 
-  const [theme, setTheme] =
-    useState<ThemePreference>("System");
   const [compactMode, setCompactMode] = useState(false);
 
   const [defaultPage, setDefaultPage] =
     useState<DefaultPage>("Dashboard");
   const [ticketsPerPage, setTicketsPerPage] = useState("10");
   const [autoRefresh, setAutoRefresh] = useState("5");
+
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
   const savedSettings = localStorage.getItem(
@@ -62,7 +67,15 @@ export default function Settings() {
       parsedSettings.desktopNotifications,
     );
     setSoundAlerts(parsedSettings.soundAlerts);
-    setTheme(parsedSettings.theme);
+
+    if (
+      parsedSettings.theme === "light" ||
+      parsedSettings.theme === "dark" ||
+      parsedSettings.theme === "system"
+    ) {
+      setTheme(parsedSettings.theme);
+    }
+
     setCompactMode(parsedSettings.compactMode);
     setDefaultPage(parsedSettings.defaultPage);
     setTicketsPerPage(parsedSettings.ticketsPerPage);
@@ -70,7 +83,7 @@ export default function Settings() {
   } catch {
     localStorage.removeItem("supportflow-settings");
   }
-}, []);
+}, [setTheme]);
 
   function handleSave() {
     const settings: SavedSettings = {
@@ -88,6 +101,19 @@ export default function Settings() {
     };
     localStorage.setItem("supportflow-settings", JSON.stringify(settings));
     toast.success("Settings saved successfully.");
+  }
+
+  function handleResetDemoData() {
+    const confirmed = window.confirm(
+      "This will discard any changes made to the demo tickets and restore the original sample data. Continue?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    localStorage.removeItem("supportflow-tickets");
+    window.location.reload();
   }
 
   return (
@@ -286,14 +312,17 @@ export default function Settings() {
                   value={theme}
                   onChange={(event) =>
                     setTheme(
-                      event.target.value as ThemePreference,
+                      event.target.value as 
+                        | "light"
+                        | "dark"
+                        | "system",
                     )
                   }
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500"
                 >
-                  <option value="Light">Light</option>
-                  <option value="Dark">Dark</option>
-                  <option value="System">System</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="system">System</option>
                 </select>
               </div>
 
@@ -438,6 +467,29 @@ export default function Settings() {
                 className="rounded-xl border border-slate-300 px-5 py-3 text-left font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 Configure Two-Factor Authentication
+              </button>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Data
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                SupportFlow stores demo tickets in your browser. Reset
+                them back to the original sample data.
+              </p>
+            </div>
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={handleResetDemoData}
+                className="rounded-xl border border-slate-300 px-5 py-3 text-left font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Reset Demo Data
               </button>
             </div>
           </section>
