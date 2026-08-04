@@ -1,62 +1,34 @@
 import { useMemo } from "react";
 import { useTickets } from "../context/TicketContext";
+import { getStatusBreakdown } from "../lib/ticketMetrics";
+import type { TicketStatus } from "../types/Ticket";
+
+const statusColors: Record<TicketStatus, string> = {
+  Open: "bg-blue-500",
+  "In Progress": "bg-amber-500",
+  Pending: "bg-slate-500",
+  Resolved: "bg-emerald-500",
+  Closed: "bg-slate-900 dark:bg-slate-400",
+};
 
 export default function TicketStatusBreakdown() {
   const { tickets } = useTickets();
 
-  const stats = useMemo(() => {
-    return {
-      Open: tickets.filter((t) => t.status === "Open").length,
-      "In Progress": tickets.filter(
-        (t) => t.status === "In Progress",
-      ).length,
-      Pending: tickets.filter(
-        (t) => t.status === "Pending",
-      ).length,
-      Resolved: tickets.filter(
-        (t) => t.status === "Resolved",
-      ).length,
-      Closed: tickets.filter(
-        (t) => t.status === "Closed",
-      ).length,
-    };
+  const rows = useMemo(() => {
+    return getStatusBreakdown(tickets).map((entry) => ({
+      label: entry.status,
+      value: entry.count,
+      color: statusColors[entry.status],
+    }));
   }, [tickets]);
 
-  const rows = [
-    {
-      label: "Open",
-      value: stats.Open,
-      color: "bg-blue-500",
-    },
-    {
-      label: "In Progress",
-      value: stats["In Progress"],
-      color: "bg-amber-500",
-    },
-    {
-      label: "Pending",
-      value: stats.Pending,
-      color: "bg-slate-500",
-    },
-    {
-      label: "Resolved",
-      value: stats.Resolved,
-      color: "bg-emerald-500",
-    },
-    {
-      label: "Closed",
-      value: stats.Closed,
-      color: "bg-slate-900",
-    },
-  ];
-
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-900">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+      <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
         Ticket Status
       </h2>
 
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Live breakdown of all ticket statuses.
       </p>
 
@@ -71,12 +43,12 @@ export default function TicketStatusBreakdown() {
                 className={`h-3 w-3 rounded-full ${row.color}`}
               />
 
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {row.label}
               </span>
             </div>
 
-            <span className="text-lg font-bold text-slate-900">
+            <span className="text-lg font-bold text-slate-900 dark:text-white">
               {row.value}
             </span>
           </div>

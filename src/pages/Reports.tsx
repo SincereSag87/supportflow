@@ -13,6 +13,14 @@ import {
   YAxis,
 } from "recharts";
 import { useTickets } from "../context/TicketContext";
+import { useTheme } from "../context/ThemeContext";
+import {
+  getAgentWorkload,
+  getPerformanceMetrics,
+  getPriorityBreakdown,
+  getStatusBreakdown,
+  getTopCustomers,
+} from "../lib/ticketMetrics";
 
 const statusColors = [
   "#2563eb",
@@ -24,265 +32,123 @@ const statusColors = [
 
 export default function Reports() {
   const { tickets } = useTickets();
+  const { resolvedTheme } = useTheme();
+
+  const isDark = resolvedTheme === "dark";
 
   const reportMetrics = useMemo(() => {
-    const totalTickets = tickets.length;
+    const statusBreakdown = getStatusBreakdown(tickets);
+    const priorityBreakdown = getPriorityBreakdown(tickets);
+    const performance = getPerformanceMetrics(tickets);
 
-    const openTickets = tickets.filter(
-      (ticket) => ticket.status === "Open",
-    ).length;
+    const openTickets =
+      statusBreakdown.find((entry) => entry.status === "Open")?.count ?? 0;
 
     const resolvedTickets = tickets.filter(
       (ticket) =>
-        ticket.status === "Resolved" ||
-        ticket.status === "Closed",
+        ticket.status === "Resolved" || ticket.status === "Closed",
     ).length;
 
-    const criticalTickets = tickets.filter(
-      (ticket) => ticket.priority === "Critical",
-    ).length;
-
-    const resolutionRate =
-      totalTickets === 0
-        ? 0
-        : Math.round(
-            (resolvedTickets / totalTickets) * 100,
-          );
-
-    const statusData = [
-      {
-        name: "Open",
-        value: tickets.filter(
-          (ticket) => ticket.status === "Open",
-        ).length,
-      },
-      {
-        name: "In Progress",
-        value: tickets.filter(
-          (ticket) => ticket.status === "In Progress",
-        ).length,
-      },
-      {
-        name: "Pending",
-        value: tickets.filter(
-          (ticket) => ticket.status === "Pending",
-        ).length,
-      },
-      {
-        name: "Resolved",
-        value: tickets.filter(
-          (ticket) => ticket.status === "Resolved",
-        ).length,
-      },
-      {
-        name: "Closed",
-        value: tickets.filter(
-          (ticket) => ticket.status === "Closed",
-        ).length,
-      },
-    ];
-
-    const priorityData = [
-      {
-        name: "Low",
-        value: tickets.filter(
-          (ticket) => ticket.priority === "Low",
-        ).length,
-      },
-      {
-        name: "Medium",
-        value: tickets.filter(
-          (ticket) => ticket.priority === "Medium",
-        ).length,
-      },
-      {
-        name: "High",
-        value: tickets.filter(
-          (ticket) => ticket.priority === "High",
-        ).length,
-      },
-      {
-        name: "Critical",
-        value: tickets.filter(
-          (ticket) => ticket.priority === "Critical",
-        ).length,
-      },
-    ];
-
-    const customerMap = new Map<
-      string,
-      {
-        name: string;
-        total: number;
-        active: number;
-        resolved: number;
-      }
-    >();
-
-    tickets.forEach((ticket) => {
-      const customer = customerMap.get(ticket.customer) ?? {
-        name: ticket.customer,
-        total: 0,
-        active: 0,
-        resolved: 0,
-      };
-
-      customer.total += 1;
-
-      if (
-        ticket.status === "Open" ||
-        ticket.status === "In Progress" ||
-        ticket.status === "Pending"
-      ) {
-        customer.active += 1;
-      }
-
-      if (
-        ticket.status === "Resolved" ||
-        ticket.status === "Closed"
-      ) {
-        customer.resolved += 1;
-      }
-
-      customerMap.set(ticket.customer, customer);
-    });
-
-    const topCustomers = [...customerMap.values()]
-      .sort((left, right) => right.total - left.total)
-      .slice(0, 5);
-
-    const agentMap = new Map<
-      string,
-      {
-        name: string;
-        total: number;
-        active: number;
-        completed: number;
-      }
-    >();
-
-    tickets.forEach((ticket) => {
-      const agent = agentMap.get(ticket.assignedTo) ?? {
-        name: ticket.assignedTo,
-        total: 0,
-        active: 0,
-        completed: 0,
-      };
-
-      agent.total += 1;
-
-      if (
-        ticket.status === "Open" ||
-        ticket.status === "In Progress" ||
-        ticket.status === "Pending"
-      ) {
-        agent.active += 1;
-      }
-
-      if (
-        ticket.status === "Resolved" ||
-        ticket.status === "Closed"
-      ) {
-        agent.completed += 1;
-      }
-
-      agentMap.set(ticket.assignedTo, agent);
-    });
-
-    const agentWorkload = [...agentMap.values()].sort(
-      (left, right) => right.total - left.total,
-    );
+    const criticalTickets =
+      priorityBreakdown.find((entry) => entry.priority === "Critical")
+        ?.count ?? 0;
 
     return {
-      totalTickets,
+      totalTickets: tickets.length,
       openTickets,
       resolvedTickets,
       criticalTickets,
-      resolutionRate,
-      statusData,
-      priorityData,
-      topCustomers,
-      agentWorkload,
+      resolutionRate: performance.resolutionRate,
+      statusData: statusBreakdown.map((entry) => ({
+        name: entry.status,
+        value: entry.count,
+      })),
+      priorityData: priorityBreakdown.map((entry) => ({
+        name: entry.priority,
+        value: entry.count,
+      })),
+      topCustomers: getTopCustomers(tickets, 5),
+      agentWorkload: getAgentWorkload(tickets),
     };
   }, [tickets]);
 
   return (
-    <main className="p-8">
+    <main className="min-h-screen bg-slate-50 p-8 transition-colors dark:bg-slate-950">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
             Analytics
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+          <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
             Reports
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
             Review service desk performance and ticket trends.
           </p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5">
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Total Tickets
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-slate-900">
+            <p className="mt-3 text-3xl font-bold text-slate-900 dark:text-white">
               {reportMetrics.totalTickets}
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Open Tickets
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-blue-600">
+            <p className="mt-3 text-3xl font-bold text-blue-600 dark:text-blue-400">
               {reportMetrics.openTickets}
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Resolved or Closed
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-emerald-600">
+            <p className="mt-3 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
               {reportMetrics.resolvedTickets}
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Critical Tickets
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-red-600">
+            <p className="mt-3 text-3xl font-bold text-red-600 dark:text-red-400">
               {reportMetrics.criticalTickets}
             </p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">
+          <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               Resolution Rate
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-indigo-600">
+            <p className="mt-3 text-3xl font-bold text-indigo-600 dark:text-indigo-400">
               {reportMetrics.resolutionRate}%
             </p>
           </article>
         </div>
 
         <div className="mt-8 grid gap-8 xl:grid-cols-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Tickets by Status
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Live distribution of tickets by current workflow
                 status.
               </p>
@@ -314,20 +180,32 @@ export default function Reports() {
                     )}
                   </Pie>
 
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                      border: `1px solid ${isDark ? "#334155" : "#cbd5e1"}`,
+                      borderRadius: "10px",
+                      color: isDark ? "#ffffff" : "#0f172a",
+                    }}
+                  />
+
+                  <Legend
+                    wrapperStyle={{
+                      color: isDark ? "#e2e8f0" : "#334155",
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Tickets by Priority
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Current ticket volume grouped by priority level.
               </p>
             </div>
@@ -336,19 +214,19 @@ export default function Reports() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={reportMetrics.priorityData}>
                   <CartesianGrid
-                    stroke="#e2e8f0"
+                    stroke={isDark ? "#334155" : "#e2e8f0"}
                     strokeDasharray="4 4"
                   />
 
                   <XAxis
                     dataKey="name"
-                    stroke="#64748b"
+                    stroke={isDark ? "#94a3b8" : "#64748b"}
                     tickLine={false}
                     axisLine={false}
                   />
 
                   <YAxis
-                    stroke="#64748b"
+                    stroke={isDark ? "#94a3b8" : "#64748b"}
                     tickLine={false}
                     axisLine={false}
                     allowDecimals={false}
@@ -356,9 +234,10 @@ export default function Reports() {
 
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #cbd5e1",
+                      backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                      border: `1px solid ${isDark ? "#334155" : "#cbd5e1"}`,
                       borderRadius: "10px",
+                      color: isDark ? "#ffffff" : "#0f172a",
                     }}
                     formatter={(value) => [value, "Tickets"]}
                   />
@@ -366,7 +245,7 @@ export default function Reports() {
                   <Bar
                     dataKey="value"
                     name="Tickets"
-                    fill="#4f46e5"
+                    fill={isDark ? "#6366f1" : "#4f46e5"}
                     radius={[6, 6, 0, 0]}
                   />
                 </BarChart>
@@ -376,49 +255,49 @@ export default function Reports() {
         </div>
 
         <div className="mt-8 grid gap-8 xl:grid-cols-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Top Customers
             </h2>
 
-            <div className="mt-6 overflow-hidden rounded-xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+            <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Customer
                     </th>
 
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Total
                     </th>
 
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Active
                     </th>
 
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Resolved
                     </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-200 bg-white">
+                <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                   {reportMetrics.topCustomers.map((customer) => (
                     <tr key={customer.name}>
-                      <td className="px-4 py-3 font-medium text-slate-900">
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                         {customer.name}
                       </td>
 
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">
                         {customer.total}
                       </td>
 
-                      <td className="px-4 py-3 text-center text-amber-600">
+                      <td className="px-4 py-3 text-center text-amber-600 dark:text-amber-400">
                         {customer.active}
                       </td>
 
-                      <td className="px-4 py-3 text-center text-emerald-600">
+                      <td className="px-4 py-3 text-center text-emerald-600 dark:text-emerald-400">
                         {customer.resolved}
                       </td>
                     </tr>
@@ -428,49 +307,49 @@ export default function Reports() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Agent Workload
             </h2>
 
-            <div className="mt-6 overflow-hidden rounded-xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+            <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Agent
                     </th>
 
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Total
                     </th>
 
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Active
                     </th>
 
-                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Completed
                     </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-200 bg-white">
+                <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                   {reportMetrics.agentWorkload.map((agent) => (
                     <tr key={agent.name}>
-                      <td className="px-4 py-3 font-medium text-slate-900">
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                         {agent.name}
                       </td>
 
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">
                         {agent.total}
                       </td>
 
-                      <td className="px-4 py-3 text-center text-amber-600">
+                      <td className="px-4 py-3 text-center text-amber-600 dark:text-amber-400">
                         {agent.active}
                       </td>
 
-                      <td className="px-4 py-3 text-center text-emerald-600">
+                      <td className="px-4 py-3 text-center text-emerald-600 dark:text-emerald-400">
                         {agent.completed}
                       </td>
                     </tr>

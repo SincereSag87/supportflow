@@ -1,63 +1,96 @@
-import { FaBell, FaPlus, FaSearch } from "react-icons/fa";
+import { FaBars, FaPlus, FaSearch } from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
+import NotificationPanel from "./NotificationPanel";
+import ProfileMenu from "./ProfileMenu";
 
-export default function Header() {
+type HeaderProps = {
+  onMenuClick: () => void;
+  onSearchClick: () => void;
+};
+
+const pageTitles: Record<string, { title: string; subtitle: string }> = {
+  "/": {
+    title: "Dashboard",
+    subtitle: "Welcome back. Here's what's happening today.",
+  },
+  "/tickets": {
+    title: "Tickets",
+    subtitle: "Review, assign, and manage support requests.",
+  },
+  "/tickets/new": {
+    title: "Create Ticket",
+    subtitle: "Log a new support request.",
+  },
+  "/customers": {
+    title: "Customers",
+    subtitle: "Manage customer accounts and ticket activity.",
+  },
+  "/reports": {
+    title: "Reports",
+    subtitle: "Service desk performance and ticket trends.",
+  },
+  "/settings": {
+    title: "Settings",
+    subtitle: "Manage your profile and preferences.",
+  },
+};
+
+export default function Header({ onMenuClick, onSearchClick }: HeaderProps) {
+  const location = useLocation();
+
+  const page = pageTitles[location.pathname] ?? pageTitles["/"];
+
   return (
-    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Dashboard
-        </h1>
+    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-5 transition-colors dark:border-slate-800 dark:bg-slate-900 sm:px-8">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+          className="rounded-xl border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden"
+        >
+          <FaBars />
+        </button>
 
-        <p className="mt-1 text-sm text-slate-500">
-          Welcome back. Here's what's happening today.
-        </p>
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+            {page.title}
+          </h1>
+
+          <p className="mt-1 hidden text-sm text-slate-500 dark:text-slate-400 sm:block">
+            {page.subtitle}
+          </p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative hidden lg:block">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-
-          <input
-            type="text"
-            placeholder="Search tickets..."
-            className="w-80 rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-indigo-500"
-          />
-        </div>
-
+      <div className="flex items-center gap-2 sm:gap-4">
         <button
           type="button"
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-medium text-white transition hover:bg-indigo-500"
+          onClick={onSearchClick}
+          aria-label="Open command palette"
+          className="relative hidden lg:block"
+        >
+          <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+
+          <span className="flex w-80 items-center rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-left text-sm text-slate-400 transition dark:border-slate-700 dark:bg-slate-950 dark:text-slate-500">
+            Search tickets...
+            <kbd className="ml-auto rounded border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+              Ctrl K
+            </kbd>
+          </span>
+        </button>
+
+        <Link
+          to="/tickets/new"
+          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-3 font-medium text-white transition hover:bg-indigo-500 sm:px-5"
         >
           <FaPlus />
-          New Ticket
-        </button>
+          <span className="hidden sm:inline">New Ticket</span>
+        </Link>
 
-        <button
-          type="button"
-          aria-label="Open notifications"
-          className="rounded-xl border border-slate-200 p-3 text-slate-600 transition hover:bg-slate-100"
-        >
-          <FaBell />
-        </button>
+        <NotificationPanel />
 
-        <button
-          type="button"
-          className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 transition hover:bg-slate-100"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700">
-            RW
-          </div>
-
-          <div className="hidden text-left lg:block">
-            <p className="text-sm font-semibold text-slate-900">
-              Raymond Wannamaker
-            </p>
-
-            <p className="text-xs text-slate-500">
-              Administrator
-            </p>
-          </div>
-        </button>
+        <ProfileMenu />
       </div>
     </header>
   );

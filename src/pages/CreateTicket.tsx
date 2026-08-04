@@ -1,8 +1,9 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTickets } from "../context/TicketContext";
-import type { Ticket,TicketPriority, } from "../types/Ticket";
+import type { Ticket, TicketPriority } from "../types/Ticket";
 import { useNavigate } from "react-router-dom";
+import LabelInput from "../components/LabelInput";
 
 type FormErrors = {
   subject?: string;
@@ -18,6 +19,8 @@ export default function CreateTicket() {
   const [priority, setPriority] =
     useState<TicketPriority>("Medium");
   const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [labels, setLabels] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
 
   const { addTicket } = useTickets();
@@ -53,6 +56,8 @@ export default function CreateTicket() {
       return;
     }
 
+    const now = new Date().toISOString();
+
     const newTicket: Ticket = {
       id: `TKT-${Date.now()}`,
       subject: subject.trim(),
@@ -60,7 +65,13 @@ export default function CreateTicket() {
       assignedTo: assignedTo.trim(),
       status: "Open",
       priority,
-      updatedAt: "Just now",
+      createdAt: now,
+      updatedAt: now,
+      dueDate: dueDate || null,
+      labels,
+      watchers: [],
+      attachments: [],
+      isFavorite: false,
       comments: [],
       timeline: [],
     };
@@ -75,22 +86,24 @@ export default function CreateTicket() {
     setAssignedTo("");
     setPriority("Medium");
     setDescription("");
+    setDueDate("");
+    setLabels([]);
     setErrors({});
   }
 
   return (
-    <main className="p-8">
+    <main className="min-h-screen bg-slate-50 p-8 transition-colors dark:bg-slate-950">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
             Service Desk
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+          <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
             Create Ticket
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
             Create a new support request for a customer.
           </p>
         </div>
@@ -100,13 +113,13 @@ export default function CreateTicket() {
             event.preventDefault();
             handleSubmit();
           }}
-          className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+          className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <label
                 htmlFor="ticket-subject"
-                className="mb-2 block text-sm font-medium text-slate-700"
+                className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Subject
               </label>
@@ -131,17 +144,17 @@ export default function CreateTicket() {
                   errors.subject ? "subject-error" : undefined
                 }
                 className={[
-                  "w-full rounded-xl border px-4 py-3 outline-none transition",
+                  "w-full rounded-xl border px-4 py-3 outline-none transition dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500",
                   errors.subject
                     ? "border-red-400 focus:border-red-500"
-                    : "border-slate-300 focus:border-indigo-500",
+                    : "border-slate-300 focus:border-indigo-500 dark:border-slate-700",
                 ].join(" ")}
               />
 
               {errors.subject && (
                 <p
                   id="subject-error"
-                  className="mt-2 text-sm text-red-600"
+                  className="mt-2 text-sm text-red-600 dark:text-red-400"
                 >
                   {errors.subject}
                 </p>
@@ -151,7 +164,7 @@ export default function CreateTicket() {
             <div>
               <label
                 htmlFor="ticket-customer"
-                className="mb-2 block text-sm font-medium text-slate-700"
+                className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Customer
               </label>
@@ -176,17 +189,17 @@ export default function CreateTicket() {
                   errors.customer ? "customer-error" : undefined
                 }
                 className={[
-                  "w-full rounded-xl border px-4 py-3 outline-none transition",
+                  "w-full rounded-xl border px-4 py-3 outline-none transition dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500",
                   errors.customer
                     ? "border-red-400 focus:border-red-500"
-                    : "border-slate-300 focus:border-indigo-500",
+                    : "border-slate-300 focus:border-indigo-500 dark:border-slate-700",
                 ].join(" ")}
               />
 
               {errors.customer && (
                 <p
                   id="customer-error"
-                  className="mt-2 text-sm text-red-600"
+                  className="mt-2 text-sm text-red-600 dark:text-red-400"
                 >
                   {errors.customer}
                 </p>
@@ -196,7 +209,7 @@ export default function CreateTicket() {
             <div>
               <label
                 htmlFor="ticket-assignee"
-                className="mb-2 block text-sm font-medium text-slate-700"
+                className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Assigned To
               </label>
@@ -223,17 +236,17 @@ export default function CreateTicket() {
                     : undefined
                 }
                 className={[
-                  "w-full rounded-xl border px-4 py-3 outline-none transition",
+                  "w-full rounded-xl border px-4 py-3 outline-none transition dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500",
                   errors.assignedTo
                     ? "border-red-400 focus:border-red-500"
-                    : "border-slate-300 focus:border-indigo-500",
+                    : "border-slate-300 focus:border-indigo-500 dark:border-slate-700",
                 ].join(" ")}
               />
 
               {errors.assignedTo && (
                 <p
                   id="assigned-to-error"
-                  className="mt-2 text-sm text-red-600"
+                  className="mt-2 text-sm text-red-600 dark:text-red-400"
                 >
                   {errors.assignedTo}
                 </p>
@@ -243,7 +256,7 @@ export default function CreateTicket() {
             <div>
               <label
                 htmlFor="ticket-priority"
-                className="mb-2 block text-sm font-medium text-slate-700"
+                className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Priority
               </label>
@@ -256,7 +269,7 @@ export default function CreateTicket() {
                     event.target.value as TicketPriority,
                   )
                 }
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -264,12 +277,37 @@ export default function CreateTicket() {
                 <option value="Critical">Critical</option>
               </select>
             </div>
+
+            <div>
+              <label
+                htmlFor="ticket-due-date"
+                className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Due Date <span className="text-slate-400">(optional)</span>
+              </label>
+
+              <input
+                id="ticket-due-date"
+                type="date"
+                value={dueDate}
+                onChange={(event) => setDueDate(event.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Labels <span className="text-slate-400">(optional)</span>
+              </label>
+
+              <LabelInput labels={labels} onChange={setLabels} />
+            </div>
           </div>
 
           <div className="mt-6">
             <label
               htmlFor="ticket-description"
-              className="mb-2 block text-sm font-medium text-slate-700"
+              className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Description
             </label>
@@ -296,17 +334,17 @@ export default function CreateTicket() {
                   : undefined
               }
               className={[
-                "w-full rounded-xl border p-4 outline-none transition",
+                "w-full rounded-xl border p-4 outline-none transition dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500",
                 errors.description
                   ? "border-red-400 focus:border-red-500"
-                  : "border-slate-300 focus:border-indigo-500",
+                  : "border-slate-300 focus:border-indigo-500 dark:border-slate-700",
               ].join(" ")}
             />
 
             {errors.description && (
               <p
                 id="description-error"
-                className="mt-2 text-sm text-red-600"
+                className="mt-2 text-sm text-red-600 dark:text-red-400"
               >
                 {errors.description}
               </p>
